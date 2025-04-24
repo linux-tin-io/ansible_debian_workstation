@@ -1,0 +1,41 @@
+---
+- name: Update APT package cache
+  apt:
+    update_cache: true
+  register: apt_cache_updated
+  become: true
+
+- name: Upgrade APT packages
+  apt:
+    upgrade: "{{ apt_upgrade_options }}"
+    autoremove: "{{ apt_autoremove }}"
+    autoclean: "{{ apt_autoclean }}"
+  when: apt_cache_updated.changed
+  register: apt_upgraded
+  become: true
+
+- name: Reboot if kernel or other critical packages were upgraded (optional)
+  reboot:
+    reboot_timeout: 300
+  when: apt_upgraded.changed and "'linux-image-' in apt_upgraded.stdout or 'grub-' in apt_upgraded.stdout"
+  # Consider adding more critical package prefixes if needed
+  become: true
+
+- name: Update Flatpak remotes
+  command: flatpak update --appstream  # Corrected command
+  register: flatpak_remotes_updated
+  ignore_errors: true # Add this to avoid failing if no updates
+  become: true
+
+- name: Upgrade Flatpak packages
+  command: flatpak update -y
+  when: flatpak_remotes_updated.changed
+  register: flatpak_upgraded
+  become: true
+
+- name: Clean up Flatpak unused runtimes
+  command: flatpak uninstall --unused -y
+  when: flatpak_upgraded.changed
+  become: true
+
+

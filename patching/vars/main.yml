@@ -1,0 +1,8 @@
+
+
+apt_upgrade_options: "full"  # Can be 'dist' for full upgrade or 'safe' for safe upgrade
+apt_autoremove: true
+apt_autoclean: true
+flatpak_remote_name: "flathub" # Assuming you primarily use Flathub
+
+

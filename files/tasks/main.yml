@@ -1,0 +1,156 @@
+---
+# This Part will do the following:
+# - Install Google Chrome
+# - Install and configure keyd
+# - Install and configure Powerline Fonts
+#
+
+- name: Create file storage directory if it doesn't exist
+  become: true
+  ansible.builtin.file:
+    path: "{{ storage_directory }}"
+    state: directory
+    owner: root
+    group: root 
+    mode: '0755'
+
+- name: Download Chrome if it doesn't exist
+  become: true
+  command: wget -O "{{ chrome_directory }}" "{{ chrome_url }}"
+  args:
+    creates: "{{ chrome_directory }}"
+  
+- name: Install Google Chrome package if it isn't already
+  apt:
+    deb: "{{ chrome_directory }}"
+    state: present
+  become: true
+
+- name: Ensure git is installed
+  apt:
+    name: git
+    state: present
+  become: true
+
+- name: Clone or update keyd repository if needed
+  git:
+    repo: "{{ keyd_url }}" 
+    dest: "{{ keyd_directory }}" 
+    update: yes # Optional: Update the repository if it already exists
+    force: yes # Optional: Force checkout even if there are local changes
+  become: true
+
+- name: Ensure build dependencies are installed
+  apt:
+    name: make
+    state: present
+  become: true
+
+- name: Build keyd if not already compiled
+  become: true
+  block:
+    - name: Check if keyd binary already exists
+      ansible.builtin.stat:
+        path: "{{ keyd_directory }}/keyd"  # Adjust the path to the main keyd executable
+      register: keyd_binary_status
+
+    - name: Build keyd
+      ansible.builtin.command: make
+      args:
+        chdir: "{{ keyd_directory }}"
+      when: not keyd_binary_status.stat.exists
+  become: true
+
+- name: Install keyd if not already installed
+  become: true
+  block:
+    - name: Check if keyd is already installed (check for binary in /usr/local/bin or similar)
+      ansible.builtin.stat:
+        path: "/usr/local/bin/keyd"  # Adjust this path to where 'make install' puts the binary
+      register: keyd_installed_check
+
+    - name: Install keyd
+      ansible.builtin.command: "make install"
+      args:
+        chdir: "{{ keyd_directory }}"
+      when: not keyd_installed_check.stat.exists
+  become: true
+
+- name: Copy Baseline keyd configuration to /etc
+  ansible.builtin.copy:
+    src: files/keyd/default.conf
+    dest: /etc/keyd/default.conf
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+
+- name: Enable and start keyd service
+  systemd:
+    name: keyd
+    enabled: true
+    state: started
+  become: true
+
+- name: Define Powerline Fonts variables
+  become: false
+  set_fact:
+    powerline_url: "https://github.com/powerline/fonts.git"
+    powerline_directory: "/opt/powerline-fonts" # Temporary clone location
+    system_fonts_dir: "/usr/share/fonts/powerline" # System-wide font directory
+
+- name: Install fontconfig
+  become: true
+  apt:
+    name: fontconfig
+    state: present
+
+- name: Clone Powerline Fonts repository
+  become: true
+  git:
+    repo: "{{ powerline_url }}"
+    dest: "{{ powerline_directory }}"
+    update: yes
+    depth: 1
+
+- name: Create Powerline fonts directory system-wide
+  become: true
+  file:
+    path: "{{ system_fonts_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Find Powerline font files
+  become: false
+  find:
+    paths: "{{ powerline_directory }}"
+    patterns:
+      - "*.ttf"
+      - "*.otf"
+    recurse: yes
+  register: powerline_fonts_found
+
+- name: Copy Powerline font files to system directory
+  become: true
+  copy:
+    src: "{{ item.path }}"
+    dest: "{{ system_fonts_dir }}/"
+    owner: root
+    group: root
+    mode: '0644'
+    remote_src: yes  # Add this line
+  loop: "{{ powerline_fonts_found.files }}"
+
+- name: Update font cache system-wide
+  become: true
+  command: fc-cache -fv
+
+- name: Remove temporary Powerline fonts directory (optional)
+  become: true
+  file:
+    path: "{{ powerline_directory }}"
+    state: absent
+
+

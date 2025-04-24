@@ -1,0 +1,131 @@
+---
+standard_packages:
+  - apt-utils
+  - aptitude
+  - neovim
+  - curl
+  - wget
+  - tmux
+  - btop
+  - mc
+  - nfs-common
+  - iperf3
+  - minicom
+  - git
+  - avrdude
+  - tcpdump
+  - flatpak
+  - gnome-software-plugin-flatpak
+  - rsync
+  - btrfs-progs
+  - 7zip
+  - fwupd
+  - bridge-utils
+  - ethtool
+  - duf
+  - pigz
+  - restic
+  - dfu-programmer
+  - ufw
+  - fonts-powerline
+  - blackbox-terminal
+  - zsh
+  - cargo
+  - htop
+  - tree
+  - screen
+  - iotop
+  - pciutils
+  - usbutils
+  - unrar-free
+  - sshfs
+  - chrome-gnome-shell
+  - blueman
+  - bluez
+  - gist
+  - xsel
+  - apparmor-utils
+
+dev_packages:
+  - build-essential
+  - libx11-dev
+  - libxcursor-dev 
+  - libxrandr-dev
+  - libxinerama-dev
+  - libxi-dev
+  - libgl1-mesa-dev
+  - g++
+  - libsdl2-gfx-dev
+  - libsdl2-image-dev
+  - libsdl2-mixer-dev
+  - libsdl2-ttf-dev
+  - libsdl2-dev
+  - libxxf86vm-dev
+  - intltool
+  - libglib2.0-dev
+  - libtool
+  - fonts-firacode
+  - golang
+  - vagrant
+  - podman
+  - buildah
+  - docker-compose
+  - binutils
+  - gcc
+  - make
+  - cmake
+  - golang-go
+  - patch
+
+desktop_packages:    
+  - keepassxc
+  - thunderbird
+  - gimp
+  - krita
+  - minder
+  - lyx
+  - texstudio
+  - gnome-shell-extension-manager
+  - nextcloud-desktop
+  - k3b
+  - obs-studio
+  - usbview
+  - inkscape
+  - filezilla
+  - gnome-firmware
+  - isoimagewriter
+
+media_packages:
+  - ffmpeg
+  - x264
+  - x265
+  - webp
+  - mpv
+  - pitivi
+  - handbrake
+  - vlc
+
+security_packages:
+  - wireguard 
+  - wireguard-tools 
+  - resolvconf
+  - libgtk-3-dev 
+  - libayatana-appindicator3-dev 
+
+reboot_tag_file: "/var/opt/homebase/reboot01.tag"
+storage_directory: "/var/opt/homebase"
+wireguird_url: "https://github.com/UnnoTed/wireguird/releases/download/v1.1.0/wireguird_amd64.deb"
+wireguird_directory: "/var/opt/homebase/wireguird_amd64.deb"
+angryip_url: "https://github.com/angryip/ipscan/releases/download/3.9.1/ipscan_3.9.1_amd64.deb"
+angryip_directory: "/var/opt/homebase/angryip"
+angryip_repo: "angryip/ipscan"
+api_url: "https://api.github.com/repos/{{ angryip_repo }}/releases/latest"
+angryip_filename: "angry-ip-scanner-latest.deb"
+dest_path: "{{ angryip_directory }}/{{ angryip_filename }}"
+rust_url: "https://sh.rustup.rs"
+rust_directory: "/var/opt/homebase/rust"
+rust_script: "{{ rust_directory }}/rustup-init.sh"
+angryip_deb_url: "https://github.com/angryip/ipscan/releases/download/3.9.1/ipscan_3.9.1_amd64.deb"
+angryip_package_name: "ipscan_3.9.1_amd64.deb"
+angryip_directory: "/var/opt/homebase/{{ angryip_package_name }}" # Adjust destination as needed
+

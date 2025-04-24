@@ -1,0 +1,20 @@
+---
+serial_to_hostname:
+  "NA": "machine-alpha"
+  "FRAGACCPAG412500G2": "framework16"
+  "SERIAL9012": "framework13"
+  "GM0B5B37": "lenovop3"
+  # Add more serial number to hostname mappings
+
+
+mac_to_hostname_map:
+  "7c:2b:e1:14:22:15": "terminal01"
+  "7c:2b:e1:14:22:12": "terminal01"
+  "7c:2b:e1:14:22:13": "terminal01"
+  "7c:2b:e1:14:22:14": "terminal01"
+  "bc:24:11:99:fd:b8": "debguest01"
+  "bc:24:11:86:f3:e1": "debguest01"
+  "64:4b:f0:39:9b:91": "framework16"   # CalDigit Docking
+  "9c:bf:0d:00:b8:51": "framework16"   # Module fw16 
+  "fc:b0:de:17:f6:31": "framework16"   # WiFi fw16
+  "fc:b0:de:18:27:05": "framework13"   # WiFi fw13

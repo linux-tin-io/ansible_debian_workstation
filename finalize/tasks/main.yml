@@ -1,0 +1,174 @@
+---
+# This Part will do the following:
+# - Install zsh
+# - Install plymouth and git
+# - Install Dark Planet plymouth theme
+# - Install Tela grub2 theme
+# - Install Desired locales (DE and EN)
+
+- name: Ensure zsh is installed
+  apt:
+    name: zsh
+    state: present
+
+- name: Install curl and git (required for Oh My Zsh)
+  become: true
+  apt:
+    name:
+      - curl
+      - git
+    state: present
+
+- name: Ensure plymouth and git are installed
+  apt:
+    name:
+      - plymouth
+      - git
+    state: present
+    update_cache: yes
+  become: true
+
+- name: Clone Dark Planet Plymouth theme
+  git:
+    repo: "{{ plymouth_theme_url }}"
+    dest: "{{ plymouth_theme_directory }}"
+    update: yes
+  become: true
+
+- name: Check if the Plymouth theme directory exists in the target location
+  become: true
+  stat:
+    path: "/usr/share/plymouth/themes/{{ plymouth_theme_name }}"
+  register: theme_dir_stat
+
+- name: Copy Dark Planet theme to plymouth themes directory
+  copy:
+    src: "{{ plymouth_theme_directory }}/pack_2/{{ plymouth_theme_name }}"
+    dest: /usr/share/plymouth/themes/
+    remote_src: yes
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+  when: not theme_dir_stat.stat.exists
+
+- name: Update Plymouth alternatives
+  command: update-alternatives --install /usr/share/plymouth/themes/default.plymouth default.plymouth /usr/share/plymouth/themes/{{ plymouth_theme_name }}/{{ plymouth_theme_name }}.plymouth 100
+  become: true
+  when: not theme_dir_stat.stat.exists # Only update if we copied the theme
+
+- name: Set Dark Planet as the default Plymouth theme
+  command: update-alternatives --set default.plymouth /usr/share/plymouth/themes/{{ plymouth_theme_name }}/{{ plymouth_theme_name }}.plymouth
+  become: true
+  when: not theme_dir_stat.stat.exists # Only set if we copied the theme
+
+- name: Update initramfs to apply the new theme
+  command: update-initramfs -u
+  become: true
+  when: not theme_dir_stat.stat.exists # Only update if we copied the theme
+
+- name: Remove all 'splash' occurrences
+  become: true
+  replace:
+    path: /etc/default/grub
+    regexp: '\s*splash\s*'
+    replace: ''
+  notify: Update GRUB
+
+- name: Ensure 'splash' is in GRUB_CMDLINE_LINUX_DEFAULT
+  become: true
+  lineinfile:
+    path: /etc/default/grub
+    regexp: '^GRUB_CMDLINE_LINUX_DEFAULT="(.*)"$'
+    line: 'GRUB_CMDLINE_LINUX_DEFAULT="\1 splash"'
+    state: present
+    backrefs: yes
+    validate: 'grep -q "splash" %s'
+  notify: Update GRUB
+
+- name: Ensure git and grub-customizer are installed
+  apt:
+    name:
+      - git
+      - grub-customizer # for easy theme selection
+    state: present
+    update_cache: yes
+  become: true
+
+- name: Clone grub2-themes repository
+  git:
+    repo: "{{ grub2_theme_url }}"
+    dest: "{{ grub2_theme_directory }}"
+    version: master
+  become: true
+
+- name: Install Tela theme for 2K
+  become: true
+  block:
+    - name: Check if Tela 2K theme is already installed
+      stat:
+        path: /usr/share/grub/themes/telax # Adjust this path based on where the script installs the theme
+      register: tela_2k_installed
+
+    - name: Install Tela theme for 2K
+      command: "{{ grub2_theme_directory }}/install.sh -t tela -s 2k"
+      args:
+        chdir: "{{ grub2_theme_directory }}" # Good practice to specify the working directory
+      when: not tela_2k_installed.stat.exists
+
+- name: Install locales package (if not present)
+  become: true
+  apt:
+    name: locales
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Check if desired locales are generated
+  become: true
+  command: "locale -a"
+  register: current_locales
+  changed_when: false
+
+- name: Ensure desired locales are present and uncommented in /etc/locale.gen
+  become: true
+  lineinfile:
+    path: /etc/locale.gen
+    line: "{{ item }}"
+    state: present
+    regexp: "^#?{{ item }}$"
+  loop: "{{ locales_to_generate }}"
+  when: item not in current_locales.stdout_lines
+
+- name: Generate locales
+  become: true
+  command: "locale-gen"
+  when: >
+    (locales_to_generate | difference(current_locales.stdout_lines | map('regex_escape'))) | length > 0
+
+- name: Set system-wide locale in /etc/default/locale
+  become: true
+  blockinfile:
+    path: /etc/default/locale
+    block: |
+      LANG="{{ desired_lang }}"
+      LC_ALL="{{ desired_lc_all }}"
+      LC_CTYPE="{{ desired_lang }}"
+      LC_NUMERIC="{{ desired_lang }}"
+      LC_TIME="{{ desired_lang }}"
+      LC_COLLATE="{{ desired_lang }}"
+      LC_MONETARY="{{ desired_lang }}"
+      LC_MESSAGES="{{ desired_lang }}"
+      LC_PAPER="{{ desired_lang }}"
+      LC_NAME="{{ desired_lang }}"
+      LC_ADDRESS="{{ desired_lang }}"
+      LC_TELEPHONE="{{ desired_lang }}"
+      LC_MEASUREMENT="{{ desired_lang }}"
+      LC_IDENTIFICATION="{{ desired_lang }}"
+    owner: root
+    group: root
+
+- name: Update system locale
+  become: true
+  command: "update-locale"
+
+

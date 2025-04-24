@@ -1,0 +1,63 @@
+---
+- name: Gather system facts
+  become: true
+  setup:
+    filter: ansible_product_serial
+
+- name: Update apt cache
+  become: true
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Display MAC addresses of all interfaces
+  become: true
+  debug:
+    msg: "Interface: {{ item }}, MAC Address: {{ ansible_facts[item].macaddress }}"
+  loop: "{{ ansible_interfaces }}"
+  when: ansible_facts[item].macaddress is defined
+
+- name: Debug Ethernet MAC Addresses
+  debug:
+    msg: "Checking interface {{ item }}: Type={{ ansible_facts[item].type }}, MAC={{ ansible_facts[item].macaddress }}, Lower MAC={{ ansible_facts[item].macaddress | lower }}, In Map={{ ansible_facts[item].macaddress | lower in mac_to_hostname_map }}"
+  loop: "{{ ansible_interfaces }}"
+  when: ansible_facts[item].type == 'ether'
+
+- name: Identify Matching Ethernet MAC Address (Manual Loop with Final Set Fact)
+  vars:
+    found_match: ""
+  set_fact:
+    found_match: "{{ item }}"
+  loop: "{{ ansible_interfaces }}"
+  when:
+    - ansible_facts[item].type == 'ether'
+    - ansible_facts[item].macaddress | lower in mac_to_hostname_map
+    - found_match == ""
+
+- name: Set matching_interface fact after the loop
+  become: true
+  set_fact:
+    matching_interface: "{{ found_match }}"
+
+- name: Set target_mac_address based on the first match
+  set_fact:
+    target_mac_address: "{{ ansible_facts[matching_interface].macaddress | lower if matching_interface }}"
+  become: true
+  when: matching_interface
+
+- name: Set Hostname if Matching MAC Address Found
+  hostname:
+    name: "{{ mac_to_hostname_map[target_mac_address] }}"
+  become: true
+  when: target_mac_address is defined
+
+- name: Gather system facts
+  become: true
+  setup:
+    filter: ansible_product_serial
+
+- name: Debug Serial Number
+  debug:
+    var: ansible_product_serial
+
+

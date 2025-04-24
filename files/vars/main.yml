@@ -1,0 +1,8 @@
+---
+  storage_directory: "/var/opt/homebase"
+  chrome_directory:  "/var/opt/homebase/google-chrome-stable_current_amd64.deb"
+  chrome_url: "https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
+  powerline_directory: "/var/opt/homebase/powerline-fonts"
+  powerline_url: "https://github.com/powerline/fonts.git"
+  keyd_url: "https://github.com/rvaiya/keyd.git"
+  keyd_directory: "/var/opt/homebase/keyd"

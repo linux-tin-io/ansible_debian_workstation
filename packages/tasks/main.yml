@@ -1,0 +1,276 @@
+---
+- name: Update apt cache
+  become: true
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install standard packages
+  become: true
+  apt:
+    name: "{{ standard_packages }}"
+    state: present
+
+- name: Install developer packages
+  become: true
+  apt:
+    name: "{{ dev_packages }}"
+    state: present
+
+- name: Install desktop packages
+  become: true
+  apt:
+    name: "{{ desktop_packages }}"
+    state: present
+
+- name: Install media packages
+  become: true
+  apt:
+    name: "{{ media_packages }}"
+    state: present
+
+- name: Add the flathub Flatpak remote (if it doesn't exist)
+  become: true
+  community.general.flatpak_remote:
+    name: flathub
+    state: present
+    flatpakrepo_url: https://dl.flathub.org/repo/flathub.flatpakrepo
+
+- name: Install Bambu Studio as Flatpak
+  become: true
+  community.general.flatpak:
+    name: com.bambulab.BambuStudio
+    state: present
+
+- name: Install Joplin as Flatpak
+  become: true
+  community.general.flatpak: 
+    name: net.cozic.joplin_desktop
+    state: present
+
+- name: Install Mission Center as flatpak
+  become: true
+  community.general.flatpak: 
+    name: io.missioncenter.MissionCenter
+    state: present
+
+- name: Install MakeMKV (Flatpak)
+  become: true
+  community.general.flatpak:
+    name: com.makemkv.MakeMKV
+    state: present
+
+- name: Install FreeCAD Flatpak
+  become: true
+  community.general.flatpak:
+    name: org.freecadweb.FreeCAD
+    state: present
+
+- name: Install Lollypop Flatpak
+  become: true
+  community.general.flatpak:
+    name: org.gnome.Lollypop
+    state: present
+
+- name: Install OpenSCAD Flatpak
+  become: true
+  community.general.flatpak:
+    name: org.openscad.OpenSCAD
+    state: present
+
+
+- name: Install setuptools (Debian/Ubuntu)
+  become: true
+  apt:
+    name: python3-setuptools
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Install pip3 (Debian/Ubuntu)
+  become: true
+  apt:
+    name: python3-pip
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Upgrade python3-requests (Debian/Ubuntu)
+  become: true
+  apt:
+    name: python3-requests
+    state: latest
+  when: ansible_os_family == "Debian"
+
+- name: Install gnupg (required for gpg commands)
+  become: true
+  apt:
+    name: gnupg
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Check requests version
+  become: true
+  command: python3 -c "import requests; print(requests.__version__)"
+  register: requests_version
+
+- name: Print requests version
+  debug:
+    var: requests_version.stdout
+
+- name: Install wget and apt-transport-https
+  become: true
+  apt:
+    name:
+      - wget
+      - apt-transport-https
+    state: present
+
+- name: Create the keyrings directory (if it doesn't exist - though /usr/share usually does)
+  become: true
+  file:
+    path: /usr/share/keyrings
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Download Element repository key
+  become: true
+  command: wget -O /usr/share/keyrings/element-io-archive-keyring.gpg https://packages.element.io/debian/element-io-archive-keyring.gpg
+  args:
+    creates: /usr/share/keyrings/element-io-archive-keyring.gpg
+
+- name: Add Element repository source list
+  become: true
+  shell: echo "deb [signed-by=/usr/share/keyrings/element-io-archive-keyring.gpg] https://packages.element.io/debian/ default main" | sudo tee /etc/apt/sources.list.d/element-io.list
+  args:
+    creates: /etc/apt/sources.list.d/element-io.list
+
+- name: Update apt cache now
+  become: true
+  delay: 60
+  apt:
+    update_cache: yes
+
+- name: Install element-desktop
+  become: true
+  apt:
+    name: element-desktop
+    state: present
+
+- name: Create file storage directory if it doesn't exist
+  become: true
+  ansible.builtin.file:
+    path: "{{ storage_directory }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Download Wireguird if it doesn't exist
+  become: true
+  command: wget -O "{{ wireguird_directory }}" "{{ wireguird_url }}"
+  args:
+    creates: "{{ wireguird_directory }}"
+
+- name: Get local file checksum for Wireguird (if it exists)
+  become: true
+  stat:
+    path: "{{ wireguird_directory }}"
+  register: local_file_info
+
+# Remove the task that uses 'uri' to get the remote checksum, as it's failing.
+# We'll rely on 'wget' to download if the file doesn't exist.
+
+- name: Install Wireguird if it isn't already
+  apt:
+    deb: "{{ wireguird_directory }}"
+    state: present
+  become: true
+  when: local_file_info.stat.exists
+
+
+# detect, if reboot is required
+- name: Check if reboot tag file exists
+  ansible.builtin.stat:
+    path: "{{ reboot_tag_file }}"
+  register: reboot_tag_status
+
+# reboot required
+- name: Initiate reboot and wait for the machine to come back online
+  become: true
+  ansible.builtin.reboot:
+    msg: "Reboot initiated by Ansible to to the absence of {{ reboot_tag_file }}"
+    reboot_timeout: 300  # Maximum time to wait for the reboot (in seconds)
+    connect_timeout: 60   # Timeout for the initial connection attempt after reboot
+  when: not reboot_tag_status.stat.exists
+
+- name: Create the directory for the reboot tag file
+  become: true
+  file:
+    path: /var/opt/homebase/
+    state: directory
+  when: not reboot_tag_status.stat.exists
+
+- name: Create the reboot tag file (optional - to prevent continuous reboots)
+  become: true
+  ansible.builtin.file:
+    path: "{{ reboot_tag_file }}"
+    state: touch
+    mode: '0644'
+  when: not reboot_tag_status.stat.exists
+
+- name: Ensure python3-pip is installed
+  become: true
+  apt:
+    name: python3-pip
+    state: present
+  when: ansible_os_family == "Debian" # Adjust for other OS families if needed
+
+- name: Install or upgrade python3-requests and python3-urllib3 using apt
+  become: true
+  apt:
+    name:
+      - python3-requests
+      - python3-urllib3
+    state: latest
+
+- name: Set Angry IP Scanner download URL
+  become: true
+  set_fact:
+    angryip_deb_url: "https://github.com/angryip/ipscan/releases/download/3.9.1/ipscan_3.9.1_amd64.deb"
+    angryip_package_name: "ipscan_3.9.1_amd64.deb"
+    angryip_directory: "/var/opt/homebase/{{ angryip_package_name }}" # Adjust destination as needed
+
+- name: Create destination directory /var/opt/homebase if it doesn't exist
+  become: true
+  file:
+    path: /var/opt/homebase
+    state: directory
+    owner: roland
+    group: roland
+    mode: '0755'
+
+- name: Download Angry IP Scanner if it doesn't exist
+  become: true
+  command: wget -O "{{ angryip_directory}}" "{{ angryip_deb_url }}"
+  args:
+    creates: "{{ angryip_directory }}"
+
+- name: Install the downloaded Angry IP Scanner .deb package
+  become: true
+  apt:
+    deb: "{{ angryip_directory }}"
+    state: present
+
+- name: Install git
+  package:
+    name: git
+    state: present
+
+- name: Ensure curl is installed
+  become: true # needed to install packages
+  apt:
+    name: curl
+    state: present
+
+

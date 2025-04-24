@@ -1,0 +1,13 @@
+desired_lang: "en_US.UTF-8"
+desired_lc_all: "en_US.UTF-8"
+locales_to_generate:
+  - "en_US.UTF-8 UTF-8"
+  - "de_DE.UTF-8 UTF-8"
+
+plymouth_theme_url: "https://github.com/adi1090x/plymouth-themes.git"
+plymouth_theme_directory: "/var/opt/homebase/plymouth-theme"
+plymouth_theme_name: "dark_planet"
+grub_config_file: "/etc/default/grub"
+grub2_theme_url: "https://github.com/vinceliuice/grub2-themes"
+grub2_theme_directory: "/var/opt/homebase/grub2-theme"
+

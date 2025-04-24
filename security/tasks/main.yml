@@ -1,0 +1,21 @@
+---
+- name: Disable root login
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^PermitRootLogin'
+    line: 'PermitRootLogin no'
+  become: true
+
+- name: Install and configure UFW
+  ufw:
+    state: enabled
+    policy: deny
+  become: true
+
+- name: Allow SSH
+  ufw:
+    rule: allow
+    port: '22'
+    proto: tcp
+  become: true
+
