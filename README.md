@@ -1,0 +1,43 @@
+ansible_debian_workstation
+- common
+  - Update System (apt update)
+  - Get all MAC addresses
+  - Set Hotsname according MAC address
+  - Print Serial Number
+- packages
+  - standard packages (see vars/main.yml)
+  - development packages (see vars/main.yml)
+  - desktop packages (see vars/main.yml)
+  - media packages (see vars/main.yml)
+  - security packages (see vars/main.yml)
+  - flathub install and config
+  - Bambu Studio Flatpak
+  - Joplin Flatpak
+  - Mission Center Flatpak
+  - MakeMKV Flatpak
+  - FreeCAD Flatpak
+  - Lollypop Flatpak
+  - OpenSCAD Flatpak
+  - Element repository config and install
+  - Wireguird repository and install
+  - Angry IP Scanner repository and install
+- security
+  - Disable root login
+  - Install and configure UFW
+  - Allow SSH in SSH
+- files
+  - Download and install Google Chrome
+  - Download, compile and install keyd
+  - Configure keyd
+  - Download and install Powerline Fonts
+  - Update Font Cache
+- patching
+  - update all flatpak packages
+  - update all deb packages
+- finalize
+  - Install zsh
+  - Install plymouth
+  - Clone Dark Planet Plymouth theme
+  - Install Plymouth theme
+  - Install and configure Tela Grub2 theme in 2k
+  - Install and configure DE_DE and EN_US locale
