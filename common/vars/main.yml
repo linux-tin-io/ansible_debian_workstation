@@ -18,3 +18,4 @@ mac_to_hostname_map:
   "9c:bf:0d:00:b8:51": "framework16"   # Module fw16 
   "fc:b0:de:17:f6:31": "framework16"   # WiFi fw16
   "fc:b0:de:18:27:05": "framework13"   # WiFi fw13
+  "00:11:32:a9:02:84": "thinkstation"  # 10G card
