@@ -6,3 +6,9 @@
   powerline_url: "https://github.com/powerline/fonts.git"
   keyd_url: "https://github.com/rvaiya/keyd.git"
   keyd_directory: "/var/opt/homebase/keyd"
+  rootca_cert_name: "homebaserootca.crt"
+  rootca_cert_src: "files/HomeBase-Root-CA.cer"
+  # (Optional) List of old cert names that should be removed
+  # useful if you rotate the CA or rename the file
+  # rootca_old_certs: []
+
