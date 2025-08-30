@@ -3,7 +3,7 @@
 # - Install Google Chrome
 # - Install and configure keyd
 # - Install and configure Powerline Fonts
-#
+# - Install HomeBase RootCA
 
 - name: Create file storage directory if it doesn't exist
   become: true
@@ -153,4 +153,27 @@
     path: "{{ powerline_directory }}"
     state: absent
 
+- name: ensure ca-certificates package is installed
+  apt:
+    name: ca-certificates
+    state: present
+    update_cache: yes
+  become: yes
 
+#- name: (optional) remove old certs that are no longer needed
+#  file:
+#    path: "/usr/local/share/ca-certificates/{{ item }}"
+#    state: absent
+#  loop: "{{ rootca_old_certs }}"
+#  become: yes
+#  when: rootca_old_certs | length > 0
+
+- name: copy Root‑CA cert to /usr/local/share/ca-certificates/
+  copy:
+    src: "{{ rootca_cert_src }}"
+    dest: "/usr/local/share/ca-certificates/{{ rootca_cert_name }}"
+    mode: '0644'
+    owner: root
+    group: root
+  become: yes
+  notify: refresh ca-certificates

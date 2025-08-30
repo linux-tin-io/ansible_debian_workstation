@@ -1,0 +1,11 @@
+---
+# The name of the certificate file in /usr/local/share/ca-certificates/
+# (must end with .crt)
+rootca_cert_name: homebaserootca.crt
+
+# Path to the PEM file on the Ansible control node
+rootca_cert_src: files/HomeBase-Root-CA.cer
+
+# (Optional) List of old cert names that should be removed
+# useful if you rotate the CA or rename the file
+# rootca_old_certs: []

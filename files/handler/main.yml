@@ -1,0 +1,7 @@
+---
+- name: refresh ca-certificates
+  command: update-ca-certificates
+  # The command always exits 0, but we want to report it as a change
+  # only when the cert file actually changed.
+  changed_when: true
+  # No `creates` – we want to run every time the handler fires
