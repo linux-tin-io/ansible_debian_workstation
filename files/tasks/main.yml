@@ -178,3 +178,29 @@
   become: yes
   notify: refresh ca-certificates
 
+- name: Ensure libnss3-tools is installed
+  ansible.builtin.package:
+    name: libnss3-tools
+    state: present
+  become: true
+
+- name: Copy HomeBase Root CA certificate
+  ansible.builtin.copy:
+    src: "{{ rootca_cert_src }}"
+    dest: "/tmp/HomeBase_Root_CA.crt"
+  become: true
+
+- name: Import certificate into Chrome's NSS database
+  ansible.builtin.shell: |
+    for user_home in /home/*; do
+      if [ -d "$user_home/.pki/nssdb" ]; then
+        certutil -A -n "HomeBase Root CA" -t "C,," -i /tmp/HomeBase_Root_CA.crt -d "sql:$user_home/.pki/nssdb"
+      fi
+      # Check for other possible Chrome profile locations
+      if [ -d "$user_home/.config/google-chrome/Default" ]; then
+        certutil -A -n "HomeBase Root CA" -t "C,," -i /tmp/HomeBase_Root_CA.crt -d "$user_home/.config/google-chrome/Default"
+      fi
+    done
+  args:
+    warn: no
+
