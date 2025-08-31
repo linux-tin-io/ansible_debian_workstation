@@ -270,7 +270,7 @@
   command: >
     certutil -A
     -n "HomeBase Root CA"
-    -t "C,-,U"
+    -t "C,,U"
     -i "/tmp/HomeBase_Root_CA.crt"
     -d "sql:{{ item }}"
   loop: "{{ chrome_profiles | default([]) }}"
