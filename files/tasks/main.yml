@@ -204,23 +204,36 @@
     dest: "/tmp/HomeBase_Root_CA.crt"
   become: true
 
-- name: Find every Chrome/NSS DB under /home
+# 1.1 – Firefox‑style NSS DB (if it exists)
+- name: Find Firefox‑style NSS DBs
+  debug: var=firefox_nssdb
   ansible.builtin.find:
     paths: /home
-    patterns: 'nssdb'          # ← just the last component
+    patterns: nssdb            # matches the directory whose name is exactly “nssdb”
     file_type: directory
-    hidden: yes
-  register: nssdbs
+    hidden: yes                # follow hidden dirs like .pki
+  register: firefox_nssdb
 
-- name: Import HomeBase Root CA into each user’s NSS DB
-  ansible.builtin.command:
-    cmd: >
-      certutil -A -n "HomeBase Root CA" -t "C,," \
-      -i /tmp/HomeBase_Root_CA.crt -d "sql:{{ item.path }}"
-  loop: "{{ nssdbs.files | map(attribute='path') | list }}"
-  become_user: "{{ item.owner }}"     # <‑‑ use the stored owner
-  # optional – only report “changed” when a new cert was added
-  changed_when: "'Certutil' in result.stdout"
-  tags:
-    - ca_import
+# 1.2 – Chrome/Chromium default profile
+- name: Find Chrome default profile directories
+  debug: var=chrome_profiles
+  ansible.builtin.find:
+    paths: /home
+    patterns: google-chrome/Default
+    file_type: directory
+    hidden: yes                # follow the hidden .config dir
+  register: chrome_profiles
+
+- name: Import into Firefox‑style NSS DB
+  ansible.builtin.command: >
+    certutil -A -n "HomeBase Root CA" -t "C,," -i /tmp/HomeBase_Root_CA.crt -d "sql:{{ item.path }}"
+  loop: "{{ firefox_nssdb.files | map(attribute='path') | list }}"
+  become_user: "{{ item.owner }}"
+
+- name: Import into Chrome default profile DB
+  ansible.builtin.command: >
+    certutil -A -n "HomeBase Root CA" -t "C,," -i /tmp/HomeBase_Root_CA.crt -d "sql:{{ item.path }}"
+  loop: "{{ chrome_profiles.files | map(attribute='path') | list }}"
+  become_user: "{{ item.owner }}"
+
 
