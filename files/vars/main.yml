@@ -11,4 +11,4 @@
   # (Optional) List of old cert names that should be removed
   # useful if you rotate the CA or rename the file
   # rootca_old_certs: []
-
+  ca_src: /tmp/HomeBase_Root_CA.crt
