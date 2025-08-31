@@ -204,16 +204,20 @@
     dest: "/tmp/HomeBase_Root_CA.crt"
   become: true
 
-- name: Find all Chrome/NSS DB directories
+- name: Gather all home directories that have a Chrome NSS DB
+  become: true
   ansible.builtin.find:
     paths: /home
     patterns: '*.pki/nssdb'
     file_type: directory
   register: nssdbs
 
-- name: Import the root CA into every NSS DB
+
+- name: Import root CA into each user’s NSS DB
   ansible.builtin.command:
     cmd: >
       certutil -A -n "HomeBase Root CA" -t "C,," \
-      -i /tmp/HomeBase_Root_CA.crt -d {{ item.path }}
+      -i /tmp/HomeBase_Root_CA.crt -d "sql:{{ item.path }}"
   loop: "{{ nssdbs.files | map(attribute='path') | list }}"
+  become_user: "{{ item.path.split('/home/')[1].split('/')[0] }}"
+
