@@ -239,7 +239,7 @@
 - name: Import into Chrome default profile DB
   become: true
   command: >
-    certutil -A -n "HomeBase Root CA" -t "C,," \
+    certutil -A -n "HomeBase Root CA" -t "C,S,U" \
     -i "{{ ca_src }}" -d "sql:{{ item }}"
   loop: "{{ chrome_profiles | default([]) }}"
   register: certutil_chrome
