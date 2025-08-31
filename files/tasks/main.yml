@@ -207,40 +207,50 @@
 - name: Find Firefox‑style NSS DBs
   ansible.builtin.find:
     paths: /home
-    patterns: nssdb            # matches the directory whose name is exactly “nssdb”
+    patterns: nssdb            # exact directory name “nssdb”
     file_type: directory
-    hidden: yes                # follow hidden dirs like .pki
+    hidden: yes                # allow traversal into .pki
   register: firefox_nssdb
 
 - name: Debug Firefox NSS‑DB locations
   debug:
     var: firefox_nssdb.files
 
+# ---------------------------------------------------------------------
+# 2. Find Chrome default profile directories
+# ---------------------------------------------------------------------
 - name: Find Chrome default profile directories
   ansible.builtin.find:
     paths: /home
-    patterns: google-chrome/Default
+    patterns: Default          # matches a directory called “Default”
     file_type: directory
-    hidden: yes                # follow the hidden .config dir
+    hidden: yes                # allow traversal into .config
   register: chrome_profiles
 
 - name: Debug Chrome profile locations
   debug:
     var: chrome_profiles.files
 
+# ---------------------------------------------------------------------
+# 3. Import into Firefox‑style NSS DBs (if any)
+# ---------------------------------------------------------------------
 - name: Import into Firefox‑style NSS DB
   ansible.builtin.command: >
-    certutil -A -n "HomeBase Root CA" -t "C,," -i /tmp/HomeBase_Root_CA.crt -d "sql:{{ item.path }}"
+    certutil -A -n "HomeBase Root CA" -t "C,," \
+    -i /tmp/HomeBase_Root_CA.crt -d "sql:{{ item.path }}"
   loop: "{{ firefox_nssdb.files | map(attribute='path') | list }}"
   become_user: "{{ item.owner }}"
   changed_when: "'Certutil' in result.stdout"
   when: firefox_nssdb.matched > 0
 
+# ---------------------------------------------------------------------
+# 4. Import into Chrome default profile DBs
+# ---------------------------------------------------------------------
 - name: Import into Chrome default profile DB
   ansible.builtin.command: >
-    certutil -A -n "HomeBase Root CA" -t "C,," -i /tmp/HomeBase_Root_CA.crt -d "sql:{{ item.path }}"
+    certutil -A -n "HomeBase Root CA" -t "C,," \
+    -i /tmp/HomeBase_Root_CA.crt -d "sql:{{ item.path }}"
   loop: "{{ chrome_profiles.files | map(attribute='path') | list }}"
   become_user: "{{ item.owner }}"
   changed_when: "'Certutil' in result.stdout"
   when: chrome_profiles.matched > 0
-
