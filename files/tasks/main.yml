@@ -215,6 +215,5 @@
         certutil -A -n "HomeBase Root CA" -t "C,," -i /tmp/HomeBase_Root_CA.crt -d "$user_home/.config/google-chrome/Default"
       fi
     done
-  args:
-    warn: no
+  warn: no
 
