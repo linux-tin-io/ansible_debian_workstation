@@ -236,18 +236,36 @@
   debug:
     var: chrome_profiles
 
-- name: Remove any existing HomeBase Root CA entry (idempotent)
+# --------------------------------------------------------------------
+# 1.  Create an empty NSS database for each Chrome profile (if needed)
+# --------------------------------------------------------------------
+- name: Ensure NSS database exists for Chrome profile
+  become: true
+  command: >
+    certutil -N
+    -d "sql:{{ item }}"
+    -f /dev/null          # dummy password file – Chrome will not use it
+  loop: "{{ chrome_profiles | default([]) }}"
+  ignore_errors: true    # If the DB already exists, ignore the error
+  register: nss_init
+
+# --------------------------------------------------------------------
+# 2.  Remove any existing HomeBase Root CA entry (idempotent)
+# --------------------------------------------------------------------
+- name: Delete HomeBase Root CA entry (if it exists)
   become: true
   command: >
     certutil -D
     -n "HomeBase Root CA"
     -d "sql:{{ item }}"
   loop: "{{ chrome_profiles | default([]) }}"
-  # `-D` will error out if the cert isn’t there – ignore that
-  ignore_errors: true
+  ignore_errors: true    # “cert not found” → just ignore
   register: certutil_remove
 
-- name: Import into Chrome default profile DB (Client & Server only)
+# --------------------------------------------------------------------
+# 3.  Import the cert as Client & Server only
+# --------------------------------------------------------------------
+- name: Add HomeBase Root CA as Client & Server cert
   become: true
   command: >
     certutil -A
