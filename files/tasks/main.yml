@@ -236,21 +236,6 @@
   debug:
     var: chrome_profiles
 
-# --------------------------------------------------------------------
-# 3. Import the CA into Firefox NSS‑DBs
-# --------------------------------------------------------------------
-- name: Import into Firefox‑style NSS DB
-  command: >
-    certutil -A -n "HomeBase Root CA" -t "C,," \
-    -i "{{ ca_src }}" -d "sql:{{ item }}"
-  loop: "{{ firefox_nssdb | default([]) }}"
-  become_user: "{{ item.split('/')[-3] }}"   # owner is the user part before /.pki
-  changed_when: "'Certutil' in result.stdout"
-  when: firefox_nssdb is defined
-
-# --------------------------------------------------------------------
-# 4. Import the CA into Chrome default profile DBs
-# --------------------------------------------------------------------
 - name: Import into Chrome default profile DB
   command: >
     certutil -A -n "HomeBase Root CA" -t "C,," \
