@@ -201,7 +201,8 @@
 - name: Copy HomeBase Root CA certificate
   ansible.builtin.copy:
     src: "{{ rootca_cert_src }}"
-    dest: "/tmp/HomeBase_Root_CA.crt"
+    dest: "{{ temp_cert_dest }}"
+    mode: '0644'
   become: true
 
 - name: Find all user home directories
@@ -226,33 +227,21 @@
     chrome_profiles: "{{ chrome_raw.stdout_lines }}"
   when: chrome_raw.stdout_lines | length > 0
 
-- name: Add the RootCA to each Chrome profile's NSS database
-  ansible.builtin.command: >
-    certutil -A -n "{{ rootca_cert_name }}"
-    -t "C,," -i "{{ rootca_cert_src }}"
-    -d "sql:{{ item }}"
-  become: true
-  loop: "{{ chrome_profiles }}"
-  when: chrome_profiles is defined and chrome_profiles | length > 0
-  register: add_cert_result
-  changed_when: "'Certificate added' in add_cert_result.stdout"
-  ignore_errors: true # Ignore errors if the cert already exists
-
-- name: Delete existing RootCA (if it exists) before adding
+- name: Delete existing RootCA (if it exists)
   ansible.builtin.command: >
     certutil -D -n "{{ rootca_cert_name }}"
     -d "sql:{{ item }}"
   become: true
-  loop: "{{ chrome_profiles }}"
-  when: add_cert_result is failed # Only run if the add operation failed (e.g., cert already exists)
-  ignore_errors: true # Ignore errors if the cert is not found
+  loop: "{{ chrome_profiles | default([]) }}"
+  ignore_errors: true
 
-- name: Re-add the RootCA to ensure it's up to date
+- name: Add the RootCA to each Chrome profile's NSS database
   ansible.builtin.command: >
     certutil -A -n "{{ rootca_cert_name }}"
-    -t "C,," -i "{{ rootca_cert_src }}"
+    -t "C,," -i "{{ temp_cert_dest }}"
     -d "sql:{{ item }}"
   become: true
-  loop: "{{ chrome_profiles }}"
-  when: add_cert_result is failed
+  loop: "{{ chrome_profiles | default([]) }}"
+  changed_when: true
+
 
