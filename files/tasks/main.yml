@@ -204,74 +204,64 @@
     dest: "/tmp/HomeBase_Root_CA.crt"
   become: true
 
-- name: Find Firefox‑style NSS DBs (shell)
-  become: true
-  shell: |
-    find /home -type d -name nssdb -print
-  register: ff_nssdb_raw
-  changed_when: false
+- name: Find all user home directories
+  ansible.builtin.find:
+    paths: /home
+    file_type: directory
+    recurse: false
+  register: user_homes
 
-- name: Build Firefox NSS‑DB facts
-  set_fact:
-    firefox_nssdb: "{{ ff_nssdb_raw.stdout_lines | map('trim') | list }}"
-  when: ff_nssdb_raw.stdout_lines | length > 0
+- name: Set a fact for home directories
+  ansible.builtin.set_fact:
+    home_dirs: "{{ user_homes.files | map(attribute='path') | list }}"
 
-- name: Debug Firefox NSS‑DB locations
-  debug:
-    var: firefox_nssdb
-
-- name: Find Chrome default profile directories (shell)
-  become: true
-  shell: |
-    find /home -path '*/.config/google-chrome/Default' -type d -print
+- name: Find all Chrome default profile paths
+  ansible.builtin.find:
+    paths: "{{ home_dirs }}"
+    patterns: ".pki/nssdb"
+    file_type: directory
+    use_regex: true
+    # Ensure we only find paths within a user's home directory.
+    # This regex looks for `.pki/nssdb` inside any directory that starts with `/home/`.
+    # The `path_regex` option is not directly available in `ansible.builtin.find`, so we'll use a `shell` module for a more robust search.
+  delegate_to: localhost
+  ansible.builtin.shell: |
+    find {{ home_dirs | join(' ') }} -path '*/.pki/nssdb' -type d
   register: chrome_raw
   changed_when: false
 
-- name: Build Chrome profile facts
-  set_fact:
-    chrome_profiles: "{{ chrome_raw.stdout_lines | map('trim') | list }}"
+- name: Set fact for Chrome profile paths
+  ansible.builtin.set_fact:
+    chrome_profiles: "{{ chrome_raw.stdout_lines }}"
   when: chrome_raw.stdout_lines | length > 0
 
-- name: Debug Chrome profile locations
-  debug:
-    var: chrome_profiles
-
-# --------------------------------------------------------------------
-# 1.  Create an empty NSS database for each Chrome profile (if needed)
-# --------------------------------------------------------------------
-- name: Ensure NSS database exists for Chrome profile
-  become: true
-  command: >
-    certutil -N
+- name: Add the RootCA to each Chrome profile's NSS database
+  ansible.builtin.command: >
+    certutil -A -n "{{ rootca_cert_name }}"
+    -t "C,," -i "{{ rootca_cert_src }}"
     -d "sql:{{ item }}"
-    -f /dev/null          # dummy password file – Chrome will not use it
-  loop: "{{ chrome_profiles | default([]) }}"
-  ignore_errors: true    # If the DB already exists, ignore the error
-  register: nss_init
-
-# --------------------------------------------------------------------
-# 2.  Remove any existing HomeBase Root CA entry (idempotent)
-# --------------------------------------------------------------------
-- name: Delete HomeBase Root CA entry (if it exists)
   become: true
-  command: >
-    certutil -D
-    -n "HomeBase Root CA"
-    -d "sql:{{ item }}"
-  loop: "{{ chrome_profiles | default([]) }}"
-  ignore_errors: true    # “cert not found” → just ignore
-  register: certutil_remove
+  loop: "{{ chrome_profiles }}"
+  when: chrome_profiles is defined and chrome_profiles | length > 0
+  register: add_cert_result
+  changed_when: "'Certificate added' in add_cert_result.stdout"
+  ignore_errors: true # Ignore errors if the cert already exists
 
-# --------------------------------------------------------------------
-# 3.  Import the cert as Client & Server only
-# --------------------------------------------------------------------
-- name: Add HomeBase Root CA as Client & Server cert
-  become: true
-  command: >
-    certutil -A
-    -n "HomeBase Root CA"
-    -t "C,,U"
-    -i "/tmp/HomeBase_Root_CA.crt"
+- name: Delete existing RootCA (if it exists) before adding
+  ansible.builtin.command: >
+    certutil -D -n "{{ rootca_cert_name }}"
     -d "sql:{{ item }}"
-  loop: "{{ chrome_profiles | default([]) }}"
-  register: certutil_chrome
+  become: true
+  loop: "{{ chrome_profiles }}"
+  when: add_cert_result is failed # Only run if the add operation failed (e.g., cert already exists)
+  ignore_errors: true # Ignore errors if the cert is not found
+
+- name: Re-add the RootCA to ensure it's up to date
+  ansible.builtin.command: >
+    certutil -A -n "{{ rootca_cert_name }}"
+    -t "C,," -i "{{ rootca_cert_src }}"
+    -d "sql:{{ item }}"
+  become: true
+  loop: "{{ chrome_profiles }}"
+  when: add_cert_result is failed
+
