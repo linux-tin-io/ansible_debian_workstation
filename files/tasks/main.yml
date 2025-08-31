@@ -238,12 +238,12 @@
 
 - name: Import into Chrome default profile DB
   become: true
+  become_user: "{{ item.split('/')[-4] }}"   # <-- user who owns the profile
   command: >
     certutil -A -n "HomeBase Root CA" -t "C,S,U" \
     -i "{{ ca_src }}" -d "sql:{{ item }}"
   loop: "{{ chrome_profiles | default([]) }}"
-  register: certutil_chrome
-    # become_user: "{{ item.split('/')[-4] }}"   # owner is the user part before /.config
-  changed_when: certutil_chrome.rc == 0 and
-                'Certutil' in certutil_chrome.stdout
-
+  register: certutil_chrome          # <- same indentation as command/loop
+  # Let the command module set changed automatically
+  # If you really want to test the output, use:
+  # changed_when: "'Certutil' in certutil_chrome.results[0].stdout"
