@@ -205,6 +205,7 @@
   become: true
 
 - name: Find Firefox‑style NSS DBs
+  become: true
   ansible.builtin.find:
     paths: /home
     patterns: nssdb            # exact directory name “nssdb”
@@ -220,6 +221,7 @@
 # 2. Find Chrome default profile directories
 # ---------------------------------------------------------------------
 - name: Find Chrome default profile directories
+  become: true
   ansible.builtin.find:
     paths: /home
     patterns: Default          # matches a directory called “Default”
