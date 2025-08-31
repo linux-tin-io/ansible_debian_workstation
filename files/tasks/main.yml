@@ -236,13 +236,24 @@
   debug:
     var: chrome_profiles
 
-- name: Import into Chrome default profile DB
+- name: Remove any existing HomeBase Root CA entry (idempotent)
   become: true
   command: >
-    certutil -A -n "HomeBase Root CA" -t "C,S" \
-    -i "/tmp/HomeBase_Root_CA.crt" -d "sql:{{ item }}"
+    certutil -D
+    -n "HomeBase Root CA"
+    -d "sql:{{ item }}"
   loop: "{{ chrome_profiles | default([]) }}"
-  register: certutil_chrome          # <- same indentation as command/loop
-  # Let the command module set changed automatically
-  # If you really want to test the output, use:
-  # changed_when: "'Certutil' in certutil_chrome.results[0].stdout"
+  # `-D` will error out if the cert isn’t there – ignore that
+  ignore_errors: true
+  register: certutil_remove
+
+- name: Import into Chrome default profile DB (Client & Server only)
+  become: true
+  command: >
+    certutil -A
+    -n "HomeBase Root CA"
+    -t "C,S"
+    -i "/tmp/HomeBase_Root_CA.crt"
+    -d "sql:{{ item }}"
+  loop: "{{ chrome_profiles | default([]) }}"
+  register: certutil_chrome
