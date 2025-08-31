@@ -209,6 +209,7 @@
     paths: /home
     patterns: 'nssdb'          # ← just the last component
     file_type: directory
+    hidden: yes
   register: nssdbs
 
 - name: Import HomeBase Root CA into each user’s NSS DB
