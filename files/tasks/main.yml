@@ -216,15 +216,6 @@
     home_dirs: "{{ user_homes.files | map(attribute='path') | list }}"
 
 - name: Find all Chrome default profile paths
-  ansible.builtin.find:
-    paths: "{{ home_dirs }}"
-    patterns: ".pki/nssdb"
-    file_type: directory
-    use_regex: true
-    # Ensure we only find paths within a user's home directory.
-    # This regex looks for `.pki/nssdb` inside any directory that starts with `/home/`.
-    # The `path_regex` option is not directly available in `ansible.builtin.find`, so we'll use a `shell` module for a more robust search.
-  delegate_to: localhost
   ansible.builtin.shell: |
     find {{ home_dirs | join(' ') }} -path '*/.pki/nssdb' -type d
   register: chrome_raw
