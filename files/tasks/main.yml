@@ -27,10 +27,10 @@
 #  become: true
 
 - name: Download Google Chrome .deb package
-  get_url:
-    url: "https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
-    dest: /tmp/google-chrome-stable_current_amd64.deb
-  register: download_result
+  command:
+    cmd: "curl -LO https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
+  register: curl_output
+  changed_when: curl_output.rc != 0
 
 - name: Install Google Chrome .deb package
   package:
