@@ -36,7 +36,6 @@
   package:
     name: /tmp/google-chrome-stable_current_amd64.deb
     state: present
-  when: download_result.changed  #Only run if the download happened.
 
 - name: Fix any dependency issues
   apt:
