@@ -5,26 +5,23 @@
 # - Install and configure Powerline Fonts
 # - Install HomeBase RootCA
 
-- name: Create file storage directory if it doesn't exist
-  become: true
-  ansible.builtin.file:
-    path: "{{ storage_directory }}"
-    state: directory
-    owner: root
-    group: root 
-    mode: '0755'
+- name: Download Google Chrome .deb package
+  command:
+    cmd: "curl -o /tmp/google-chrome-stable_current_amd64.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
+  register: curl_output
+  changed_when: curl_output.rc != 0
+  failed_when: curl_output.rc != 0
+  creates: /tmp/google-chrome-stable_current_amd64.deb
 
-- name: Download Chrome if it doesn't exist
-  become: true
-  command: wget -O "{{ chrome_directory }}" "{{ chrome_url }}"
-  args:
-    creates: "{{ chrome_directory }}"
-  
- - name: Install Google Chrome package if it isn't already
-  apt:
-    deb: "{{ chrome_directory }}"
-    state: present
-  become: true
+- name: Debug Curl Output
+  debug:
+    var: curl_output
+  when: curl_output.rc != 0
+
+- name: Install Google Chrome
+  command:
+    cmd: "dpkg -i /tmp/google-chrome-stable_current_amd64.deb"
+  when: curl_output.rc == 0  # Only run if curl succeeded
 
 - name: Fix any dependency issues
   apt:
