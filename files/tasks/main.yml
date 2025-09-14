@@ -26,9 +26,9 @@
 #    state: present
 #  become: true
 
-- name: Restore SELinux context on /tmp
-  command: "restorecon -Rv /tmp"
-  become: true  # Required to run restorecon as root
+- name: Put /tmp in AppArmor Complain Mode (Temporary)
+  command: "sudo aa-complain /tmp"
+  become: true
 
 - name: Download Google Chrome .deb package
   command:
