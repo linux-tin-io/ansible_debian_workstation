@@ -11,7 +11,6 @@
   register: curl_output
   changed_when: curl_output.rc != 0
   failed_when: curl_output.rc != 0
-  creates: /tmp/google-chrome-stable_current_amd64.deb
 
 - name: Debug Curl Output
   debug:
