@@ -26,8 +26,8 @@
   apt:
     name: "*"
     state: present
-    update_cache: yes
-  when: download_result.changed  #Run this when we installed the .deb.
+  become: true
+  when: curl_output.rc == 0  # Only run if curl succeeded
 
 - name: Ensure git is installed
   apt:
