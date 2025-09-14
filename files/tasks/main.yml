@@ -4,7 +4,7 @@
 # - Install and configure keyd
 # - Install and configure Powerline Fonts
 # - Install HomeBase RootCA
-
+#
 - name: Download Google Chrome .deb package
   command:
     cmd: "curl -o /tmp/google-chrome-stable_current_amd64.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
