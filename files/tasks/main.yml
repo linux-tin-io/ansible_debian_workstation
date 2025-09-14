@@ -14,32 +14,17 @@
     group: root 
     mode: '0755'
 
-# - name: Download Chrome if it doesn't exist
-#  become: true
-#  command: wget -O "{{ chrome_directory }}" "{{ chrome_url }}"
-#  args:
-#    creates: "{{ chrome_directory }}"
-  
-# - name: Install Google Chrome package if it isn't already
-#  apt:
-#    deb: "{{ chrome_directory }}"
-#    state: present
-#  become: true
-
-- name: Put /tmp in AppArmor Complain Mode (Temporary)
-  command: "sudo aa-complain /tmp"
+- name: Download Chrome if it doesn't exist
   become: true
-
-- name: Download Google Chrome .deb package
-  command:
-    cmd: "curl -LO -o /tmp/google-chrome-stable_current_amd64.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
-  register: curl_output
-  changed_when: curl_output.rc != 0
-  failed_when: curl_output.rc != 0
-
-- name: Install Google Chrome
-  command:
-    cmd: "dpkg -i /tmp/google-chrome-stable_current_amd64.deb"
+  command: wget -O "{{ chrome_directory }}" "{{ chrome_url }}"
+  args:
+    creates: "{{ chrome_directory }}"
+  
+ - name: Install Google Chrome package if it isn't already
+  apt:
+    deb: "{{ chrome_directory }}"
+    state: present
+  become: true
 
 - name: Fix any dependency issues
   apt:
