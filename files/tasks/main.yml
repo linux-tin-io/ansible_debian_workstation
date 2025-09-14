@@ -26,19 +26,24 @@
 #    state: present
 #  become: true
 
-- name: Add Google Chrome APT repository
-  become: true
-  apt_repository:
-    repo: "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main"
-    state: present
-    filename: google-chrome
+- name: Download Google Chrome .deb package
+  get_url:
+    url: "https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
+    dest: /tmp/google-chrome-stable_current_amd64.deb
+  register: download_result
 
-- name: Install Google Chrome (latest available)
-  become: true
+- name: Install Google Chrome .deb package
+  dpkg:
+    state: present
+    deb_file: /tmp/google-chrome-stable_current_amd64.deb
+  when: download_result.changed  #Only run if the download happened.
+
+- name: Fix any dependency issues
   apt:
-    name: google-chrome-stable
-    state: latest
+    name: "*"
+    state: present
     update_cache: yes
+  when: download_result.changed  #Run this when we installed the .deb.
 
 - name: Ensure git is installed
   apt:
