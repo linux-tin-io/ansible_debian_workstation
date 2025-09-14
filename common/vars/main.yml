@@ -20,3 +20,4 @@ mac_to_hostname_map:
   "fc:b0:de:18:27:05": "framework13"   # WiFi fw13
   "00:11:32:a9:02:84": "thinkstation"  # 10G card
   "f4:7b:89:cb:a6:8d": "gpd"           # WiFi gpd
+  "06:e0:4c:6a:83:89": "gpd"           # Ethernet gpd
