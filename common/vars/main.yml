@@ -8,6 +8,8 @@ serial_to_hostname:
 
 
 mac_to_hostname_map:
+  "f4:7b:09:cb:a6:8d": "gpd"           # WiFi gpd
+  "06:e0:4c:6a:83:89": "gpd"           # Ethernet gpd 
   "7c:2b:e1:14:22:15": "terminal01"
   "7c:2b:e1:14:22:12": "terminal01"
   "7c:2b:e1:14:22:13": "terminal01"
@@ -19,5 +21,4 @@ mac_to_hostname_map:
   "fc:b0:de:17:f6:31": "framework16"   # WiFi fw16
   "fc:b0:de:18:27:05": "framework13"   # WiFi fw13
   "00:11:32:a9:02:84": "thinkstation"  # 10G card
-  "f4:7b:89:cb:a6:8d": "gpd"           # WiFi gpd
-  "06:e0:4c:6a:83:89": "gpd"           # Ethernet gpd
+
