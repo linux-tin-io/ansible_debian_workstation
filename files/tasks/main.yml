@@ -33,7 +33,7 @@
   register: download_result
 
 - name: Install Google Chrome .deb package
-  dpkg:
+  ansible.builtin.dpkg:
     state: present
     deb_file: /tmp/google-chrome-stable_current_amd64.deb
   when: download_result.changed  #Only run if the download happened.
