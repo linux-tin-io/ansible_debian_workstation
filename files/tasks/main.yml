@@ -28,14 +28,19 @@
 
 - name: Download Google Chrome .deb package
   command:
-    cmd: "curl -LO https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
+    cmd: "curl -LO https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -v" # Added -v for verbose output
   register: curl_output
   changed_when: curl_output.rc != 0
+  failed_when: curl_output.rc != 0
+
+- name: Debug Curl Output (for troubleshooting)
+  debug:
+    var: curl_output.stdout_lines
 
 - name: Install Google Chrome .deb package
-  package:
-    name: /tmp/google-chrome-stable_current_amd64.deb
-    state: present
+  command:
+    cmd: "dpkg -i /tmp/google-chrome-stable_current_amd64.deb"
+  become: yes
 
 - name: Fix any dependency issues
   apt:
