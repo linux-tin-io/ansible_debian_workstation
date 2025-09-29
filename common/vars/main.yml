@@ -4,6 +4,7 @@ serial_to_hostname:
   "FRAGACCPAG412500G2": "framework16"
   "SERIAL9012": "framework13"
   "GM0B5B37": "lenovop3"
+  "FRAMDACPA65381007H": "frameworkD"
   # Add more serial number to hostname mappings
 
 
@@ -21,4 +22,5 @@ mac_to_hostname_map:
   "fc:b0:de:17:f6:31": "framework16"   # WiFi fw16
   "fc:b0:de:18:27:05": "framework13"   # WiFi fw13
   "00:11:32:a9:02:84": "thinkstation"  # 10G card
-
+  "9c:bf:0d:00:fa:0d": "frameworkD"    # Ethernet
+  "7a:c6:12:f1:31:ab": "frameworkD"    # WiFi fd
