@@ -5,10 +5,12 @@ serial_to_hostname:
   "SERIAL9012": "framework13"
   "GM0B5B37": "lenovop3"
   "FRAMDACPA65381007H": "frameworkD"
-  # Add more serial number to hostname mappings
-
+  "I500000": "starlite"
+    # Add more serial number to hostname mappings
 
 mac_to_hostname_map:
+  "98:5f:41:75:2e:9d": "starlite"      # WiFi starlite
+  "80:6d:97:2c:75:27": "starlite"      # Ethernet starlite
   "f4:7b:09:cb:a6:8d": "gpd"           # WiFi gpd
   "06:e0:4c:6a:83:89": "gpd"           # Ethernet gpd 
   "7c:2b:e1:14:22:15": "terminal01"
