@@ -48,6 +48,12 @@
     name: net.cozic.joplin_desktop
     state: present
 
+- name: Install Planify (Alain) Flatpak
+  become: true
+  community.general.flatpak:
+    name: io.github.alainm2.planify      # Flatpak ID of Planify
+    state: present
+
 - name: Install Mission Center as flatpak
   become: true
   community.general.flatpak: 
