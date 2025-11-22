@@ -172,29 +172,6 @@
     group: root
     mode: '0755'
 
-- name: Download Wireguird if it doesn't exist
-  become: true
-  command: wget -O "{{ wireguird_directory }}" "{{ wireguird_url }}"
-  args:
-    creates: "{{ wireguird_directory }}"
-
-- name: Get local file checksum for Wireguird (if it exists)
-  become: true
-  stat:
-    path: "{{ wireguird_directory }}"
-  register: local_file_info
-
-# Remove the task that uses 'uri' to get the remote checksum, as it's failing.
-# We'll rely on 'wget' to download if the file doesn't exist.
-
-- name: Install Wireguird if it isn't already
-  apt:
-    deb: "{{ wireguird_directory }}"
-    state: present
-  become: true
-  when: local_file_info.stat.exists
-
-
 # detect, if reboot is required
 - name: Check if reboot tag file exists
   ansible.builtin.stat:
