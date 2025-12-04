@@ -66,7 +66,6 @@ dev_packages:
   - libtool
   - fonts-firacode
   - golang
-  - vagrant
   - podman
   - buildah
   - docker-compose
