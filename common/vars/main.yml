@@ -26,3 +26,6 @@ mac_to_hostname_map:
   "00:11:32:a9:02:84": "thinkstation"  # 10G card
   "9c:bf:0d:00:fa:0d": "frameworkD"    # Ethernet
   "7a:c6:12:f1:31:ab": "frameworkD"    # WiFi fd
+  "bc:24:11:cd:05:8e": "desktop01"
+  "bc:24:11:27:d1:c4": "desktop01"
+
