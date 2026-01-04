@@ -77,7 +77,7 @@ dev_packages:
   - patch
 
 desktop_packages:    
-  - keepassxc
+  #  - keepassxc
   - thunderbird
   - gimp
   - krita
