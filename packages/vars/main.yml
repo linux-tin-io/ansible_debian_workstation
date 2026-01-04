@@ -101,7 +101,7 @@ media_packages:
   - webp
   - mpv
   - pitivi
-  - handbrake
+  #  - handbrake
   - vlc
 
 security_packages:
